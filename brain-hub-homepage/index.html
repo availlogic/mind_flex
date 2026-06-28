@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>MindFlex — AI-Era Human Brain Gym</title>
+  <meta name="description"
+        content="MindFlex is the AI-Era Human Brain Resistance Base. Train Memory, Focus, Logic, Speed, and Spatial.">
+
+  <!-- Visual Guidelines §3 typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Chart.js (radar). Loaded from CDN to keep host bundle simple. -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+
+  <link rel="stylesheet" href="./styles/tokens.css">
+  <link rel="stylesheet" href="./styles/layout.css">
+  <link rel="stylesheet" href="./styles/components.css">
+  <link rel="stylesheet" href="./styles/responsive.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="mf-topbar" role="banner">
+    <a href="/" class="mf-topbar__logo" aria-label="MindFlex home">MindFlex</a>
+
+    <button id="mf-menu-button" class="mf-topbar__menu-button" aria-label="Open menu">&#9776;</button>
+
+    <div class="mf-topbar__ticker" aria-live="polite" aria-atomic="true">
+      <span class="mf-topbar__ticker-track">Welcome to MindFlex — your cognitive resistance base.</span>
+    </div>
+
+    <div id="mf-rating" class="mf-topbar__rating" aria-label="Global rating">--</div>
+
+    <button id="mf-avatar" class="mf-topbar__avatar" aria-label="Open profile menu">A</button>
+  </header>
+
+  <!-- Offline banner -->
+  <div id="mf-offline" class="mf-offline" role="status" aria-live="polite"></div>
+
+  <!-- Main shell -->
+  <div class="mf-shell">
+
+    <!-- Left Sidebar (Desktop) -->
+    <aside id="mf-sidebar" class="mf-sidebar" aria-label="Library filters and daily progress">
+      <div class="mf-sidebar__group">
+        <h3>Daily Goals</h3>
+        <div class="mf-sidebar__daily">
+          <div>Streak: <span id="mf-streak" class="mf-streak">0 days</span></div>
+          <div class="mf-sidebar__daily-text">Today: <span id="mf-daily-progress">0/3</span></div>
+        </div>
+      </div>
+
+      <div class="mf-sidebar__group">
+        <h3>Tags</h3>
+        <label class="mf-sidebar__filter">
+          <input type="checkbox" data-mf-filter="memory"> <span>Memory</span>
+        </label>
+        <label class="mf-sidebar__filter">
+          <input type="checkbox" data-mf-filter="focus"> <span>Focus</span>
+        </label>
+        <label class="mf-sidebar__filter">
+          <input type="checkbox" data-mf-filter="logic"> <span>Logic</span>
+        </label>
+        <label class="mf-sidebar__filter">
+          <input type="checkbox" data-mf-filter="speed"> <span>Speed</span>
+        </label>
+        <label class="mf-sidebar__filter">
+          <input type="checkbox" data-mf-filter="spatial"> <span>Spatial</span>
+        </label>
+      </div>
+    </aside>
+
+    <!-- Lobby View -->
+    <main id="mf-lobby" class="mf-main">
+      <h1 style="font-size: var(--mf-fs-h1); font-weight: 700; margin-bottom: 0.5rem;">Brain Hub</h1>
+      <p style="color: var(--mf-text-muted); margin-bottom: 1rem;">
+        Out-train the machines. Pick a discipline and exceed the AI replacement threat line.
+      </p>
+
+      <div class="mf-main__filters" role="toolbar" aria-label="Category filters">
+        <button class="mf-main__filter-pill" data-mf-pill="memory" aria-pressed="false">Memory</button>
+        <button class="mf-main__filter-pill" data-mf-pill="focus"  aria-pressed="false">Focus</button>
+        <button class="mf-main__filter-pill" data-mf-pill="logic"  aria-pressed="false">Logic</button>
+        <button class="mf-main__filter-pill" data-mf-pill="speed"  aria-pressed="false">Speed</button>
+        <button class="mf-main__filter-pill" data-mf-pill="spatial" aria-pressed="false">Spatial</button>
+      </div>
+
+      <div id="mf-grid" class="mf-grid" role="list" aria-label="Available games"></div>
+    </main>
+
+    <!-- Game Stage View -->
+    <section id="mf-stage" class="mf-stage" style="display:none;" aria-label="Game stage">
+      <div class="mf-stage__header">
+        <button id="mf-stage-back" class="mf-stage__back" aria-label="Back to lobby">&#9664; Back to Lobby</button>
+        <div id="mf-stage-title" aria-live="polite"></div>
+        <div style="width:44px;"></div>
+      </div>
+      <div id="mf-stage-frame" class="mf-stage__frame">
+        <div id="mf-stage-failure" class="mf-stage__failure" style="display:none;">
+          <h2>Game failed to load</h2>
+          <p>The brain gym couldn't reach this exercise. Please retry or pick a different one.</p>
+          <button class="mf-button mf-button--primary" onclick="document.getElementById('mf-stage-back').click()">Back to Lobby</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Profile Overlay (slide-down sheet) -->
+  <div id="mf-overlay" class="mf-overlay" role="dialog" aria-modal="true" aria-labelledby="mf-overlay-title">
+    <div class="mf-overlay__card">
+      <button class="mf-overlay__close" data-mf-role="close-overlay" aria-label="Close overlay">X</button>
+      <h2 id="mf-overlay-title" style="font-size: var(--mf-fs-h2); font-weight: 600;">COGNITIVE PROFILE &amp; PROGRESS</h2>
+
+      <div class="mf-overlay__panels">
+        <div class="mf-overlay__panel">
+          <h3>RADAR CHART</h3>
+          <div class="mf-radar">
+            <canvas id="mf-radar-canvas" aria-label="Five-dimensional cognitive radar chart"></canvas>
+          </div>
+          <p style="color: var(--mf-text-muted); font-size: var(--mf-fs-muted); margin-top: 0.75rem;">
+            Dashed crimson line: <span style="color: var(--mf-accent-spatial);">AI Replacement Threat</span>.
+            Stay outside it to remain human.
+          </p>
+        </div>
+
+        <div class="mf-overlay__panel">
+          <h3>ACHIEVEMENTS &amp; BACKUP</h3>
+          <p>Streak: <span id="mf-overlay-streak" class="mf-streak">0 days</span></p>
+          <p style="color: var(--mf-text-muted); margin-top: 1rem; font-size: var(--mf-fs-muted);">Recovery Code:</p>
+          <div class="mf-token" data-mf-role="recovery-token" aria-label="Recovery mnemonic token"></div>
+          <button class="mf-button mf-button--primary" data-mf-role="copy-token" aria-label="Copy recovery code">Copy Code</button>
+
+          <div style="margin-top: 1rem;">
+            <label for="mf-import-token" style="display:block; color: var(--mf-text-muted); font-size: var(--mf-fs-muted); margin-bottom: 0.25rem;">
+              Import Token (4 dash-separated words)
+            </label>
+            <input id="mf-import-token" class="mf-input" type="text" data-mf-role="import-token"
+                   placeholder="crimson-tiger-autumn-breeze" autocomplete="off" autocorrect="off" spellcheck="false">
+            <div class="mf-error" data-mf-role="import-error" role="alert"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mf-actions">
+        <button class="mf-button mf-button--primary" data-mf-role="restore-submit">Restore</button>
+        <button class="mf-button mf-button--danger" data-mf-role="delete-data">Delete All Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Modal -->
+  <div id="mf-confirm" class="mf-confirm" data-mf-role="confirm-delete" role="alertdialog" aria-modal="true">
+    <div class="mf-confirm__card">
+      <h2>Delete all data?</h2>
+      <p>This will permanently remove your anonymous profile and all cognitive history. This cannot be undone.</p>
+      <div class="mf-confirm__actions">
+        <button class="mf-button" data-mf-role="confirm-no">Cancel</button>
+        <button class="mf-button mf-button--danger" data-mf-role="confirm-yes">Confirm Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

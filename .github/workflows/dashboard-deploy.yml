@@ -1,0 +1,44 @@
+name: brain-hub-homepage
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'brain-hub-homepage/**'
+      - '.github/workflows/dashboard-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: dashboard-deploy
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run unit tests
+        working-directory: brain-hub-homepage
+        run: |
+          npm install --no-fund --no-audit
+          npx vitest run
+      - name: Run E2E tests
+        working-directory: brain-hub-homepage
+        run: |
+          npx playwright install --with-deps chromium
+          npx playwright test
+      - name: Publish to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: brain-hub-homepage
+          directory: brain-hub-homepage
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

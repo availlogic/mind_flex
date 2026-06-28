@@ -1,0 +1,47 @@
+/* MindFlex — Visual Tokens
+ * Source of truth: docs/Visual-Guidelines.md §2 + §3 + §4 + §5
+ */
+
+:root {
+  /* Core palette */
+  --mf-bg: hsl(222, 24%, 7%);
+  --mf-card-bg: hsl(223, 20%, 12%);
+  --mf-border: hsl(223, 14%, 20%);
+  --mf-text: hsl(210, 40%, 98%);
+  --mf-text-muted: hsl(215, 15%, 70%);
+
+  /* Semantic accent colors */
+  --mf-accent-memory: hsl(180, 100%, 50%);     /* Cyan Tech */
+  --mf-accent-focus: hsl(145, 100%, 50%);      /* Green Matrix */
+  --mf-accent-logic: hsl(270, 100%, 65%);      /* Purple Logic */
+  --mf-accent-speed: hsl(32, 100%, 50%);       /* Orange Lightning */
+  --mf-accent-spatial: hsl(355, 100%, 60%);    /* Crimson Resistance */
+
+  /* Typography */
+  --mf-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --mf-font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+
+  --mf-fs-h1: 2.25rem;        /* 36px */
+  --mf-fs-h2: 1.5rem;         /* 24px */
+  --mf-fs-body: 1.0rem;       /* 16px */
+  --mf-fs-muted: 0.875rem;    /* 14px */
+  --mf-fs-digits: 1.25rem;    /* 20px */
+
+  --mf-lh-h1: 1.2;
+  --mf-lh-h2: 1.3;
+  --mf-lh-body: 1.5;
+  --mf-lh-muted: 1.4;
+  --mf-lh-digits: 1.0;
+
+  /* Layout */
+  --mf-topbar-h-desktop: 64px;
+  --mf-topbar-h-mobile: 56px;
+  --mf-sidebar-w: 240px;
+
+  /* Effects */
+  --mf-radius: 12px;
+  --mf-radius-pill: 999px;
+  --mf-blur: blur(8px);
+  --mf-transition: 0.2s ease-out;
+  --mf-glow: 0 0 8px rgba(0, 229, 255, 0.6);
+}

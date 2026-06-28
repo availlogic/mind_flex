@@ -1,0 +1,55 @@
+name: backend-tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+  pull_request:
+    paths:
+      - 'backend/**'
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: mindflex
+          POSTGRES_USER: mindflex_admin
+          POSTGRES_PASSWORD: mindflex_admin_pw
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U mindflex_admin -d mindflex"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      MINDFLEX_DB_HOST: localhost
+      MINDFLEX_DB_PORT: "5432"
+      MINDFLEX_DB_NAME: mindflex
+      MINDFLEX_DB_USER: common_svc
+      MINDFLEX_DB_PASSWORD: common_svc_pw
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v3
+      - name: Install dependencies
+        working-directory: backend
+        run: uv sync --extra dev
+      - name: Bootstrap SQL
+        working-directory: backend
+        run: |
+          PGPASSWORD=mindflex_admin_pw psql -h localhost -U mindflex_admin -d mindflex \
+            -v ON_ERROR_STOP=1 -f db/init/01_schemas.sql \
+            -v ON_ERROR_STOP=1 -f db/init/02_roles.sql \
+            -v ON_ERROR_STOP=1 -f db/init/03_procedure.sql || true
+      - name: Run pytest
+        working-directory: backend
+        run: uv run pytest --cov

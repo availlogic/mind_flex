@@ -1,0 +1,18 @@
+# Cloudflare Tunnel — sample config.yml
+# Source: docs/Architecture.md §5, docs/Constraints.md (Tunneling Gateway)
+#
+# DO NOT commit real tunnel IDs or credentials to version control.
+# Use `cloudflared tunnel create mindflex-prod` and `cloudflared tunnel route dns`
+# to provision the tunnel, then supply credentials via cloudflared's standard
+# `~/.cloudflared/<TUNNEL_ID>.json` mechanism (mounted as a secret volume in
+# Docker).
+
+tunnel: <TUNNEL_ID>
+credentials-file: /etc/cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  # Public traffic /api/* -> nginx container in the same Docker network.
+  - hostname: api.maxithome.com
+    service: http://nginx:8080
+  # Catch-all (required by cloudflared) — return 404.
+  - service: http_status:404

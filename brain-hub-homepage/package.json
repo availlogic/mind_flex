@@ -1,0 +1,19 @@
+{
+  "name": "brain-hub-homepage",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MindFlex host lobby dashboard (frontend).",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "dev": "python3 -m http.server 5173",
+    "build": "echo 'Static site; no build step required for MVP.'"
+  },
+  "devDependencies": {
+    "vitest": "^1.6.0",
+    "jsdom": "^24.0.0",
+    "@playwright/test": "^1.45.0"
+  }
+}

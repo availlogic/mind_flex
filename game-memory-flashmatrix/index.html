@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Flash Matrix — MindFlex</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="fm-body">
+  <main class="fm-stage" aria-label="Flash Matrix memory game">
+    <header class="fm-header">
+      <div class="fm-status" id="fm-status">Press Start to begin.</div>
+      <div class="fm-score-row">
+        <span class="fm-round" id="fm-round">Round 0</span>
+        <span class="fm-best"  id="fm-best">Best: --</span>
+      </div>
+    </header>
+
+    <div class="fm-frame">
+      <canvas id="fm-canvas" class="fm-canvas" aria-label="Memory grid"></canvas>
+    </div>
+
+    <div class="fm-controls" role="group" aria-label="Game controls">
+      <button id="fm-start" class="fm-btn fm-btn--primary" type="button">Start</button>
+      <button id="fm-retry" class="fm-btn" type="button" disabled>Retry</button>
+      <button id="fm-mute"  class="fm-btn" type="button" aria-pressed="false" aria-label="Toggle sound">Sound: On</button>
+    </div>
+  </main>
+
+  <!-- Load the host SDK from the same origin (URL rewrite puts it at /sdk/mindflex-bridge.js) -->
+  <script src="/sdk/mindflex-bridge.js"></script>
+  <script type="module" src="./game.js"></script>
+</body>
+</html>

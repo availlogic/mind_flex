@@ -1,0 +1,80 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mindflex-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mindflex
+      POSTGRES_USER: mindflex_admin
+      POSTGRES_PASSWORD: mindflex_admin_pw
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mindflex_admin -d mindflex"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - mindflex_net
+
+  profile-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.profile
+    container_name: mindflex-profile-service
+    restart: unless-stopped
+    environment:
+      MINDFLEX_DB_HOST: postgres
+      MINDFLEX_DB_PORT: "5432"
+      MINDFLEX_DB_NAME: mindflex
+      MINDFLEX_DB_USER: common_svc
+      MINDFLEX_DB_PASSWORD: common_svc_pw
+      MINDFLEX_DB_MIN: "1"
+      MINDFLEX_DB_MAX: "5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mindflex_net
+
+  game-telemetry-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.game
+    container_name: mindflex-game-telemetry-service
+    restart: unless-stopped
+    environment:
+      MINDFLEX_DB_HOST: postgres
+      MINDFLEX_DB_PORT: "5432"
+      MINDFLEX_DB_NAME: mindflex
+      MINDFLEX_DB_USER: game_memory_matrix_svc
+      MINDFLEX_DB_PASSWORD: game_memory_matrix_svc_pw
+      MINDFLEX_DB_MIN: "1"
+      MINDFLEX_DB_MAX: "5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mindflex_net
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: mindflex-nginx
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - profile-service
+      - game-telemetry-service
+    networks:
+      - mindflex_net
+
+volumes:
+  postgres_data:
+
+networks:
+  mindflex_net:
+    driver: bridge

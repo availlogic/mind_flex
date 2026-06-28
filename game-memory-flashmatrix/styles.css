@@ -1,0 +1,119 @@
+/* Flash Matrix — sub-game styles
+ * Spec:
+ *   docs/PRD.md §11.2.4 (aspect-ratio: 1/1 letterbox)
+ *   docs/Visual-Guidelines.md §5 (touch lockout rules)
+ *   docs/Constraints.md (44x44px targets, no zoom, no user-select)
+ */
+
+* {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: hsl(222, 24%, 7%);
+  color: hsl(210, 40%, 98%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  overflow: hidden;
+}
+
+.fm-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.fm-stage {
+  width: min(100%, 600px);
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: hsl(223, 20%, 12%);
+  border: 1px solid hsl(223, 14%, 20%);
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.fm-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fm-status {
+  font-size: 1rem;
+  color: hsl(210, 40%, 98%);
+  min-height: 24px;
+}
+
+.fm-score-row {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  color: hsl(215, 15%, 70%);
+}
+
+.fm-frame {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(222, 24%, 7%);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid hsl(223, 14%, 20%);
+}
+
+.fm-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.fm-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.fm-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: hsl(210, 40%, 98%);
+  border: 1px solid hsl(223, 14%, 20%);
+  border-radius: 8px;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: border-color 0.2s ease-out, color 0.2s ease-out, background 0.2s ease-out;
+}
+
+.fm-btn:hover, .fm-btn:focus-visible {
+  outline: 2px dashed hsl(180, 100%, 50%);
+  outline-offset: 2px;
+}
+
+.fm-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.fm-btn--primary {
+  background: hsl(222, 24%, 7%);
+  border-color: hsl(180, 100%, 50%);
+  color: hsl(180, 100%, 50%);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+}

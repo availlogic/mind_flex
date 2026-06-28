@@ -1,0 +1,14 @@
+name = "brain-hub-homepage"
+compatibility_date = "2025-09-01"
+pages_build_output_dir = "."
+
+# Source-of-truth mappings:
+#  - /                       -> dashboard (index.html)
+#  - /games/memory/flashmatrix/* -> game (served from /games/memory/flashmatrix/* in this repo)
+#  - /sdk/mindflex-bridge.js -> shared SDK (served from /sdk/mindflex-bridge.js in this repo)
+#
+# In production, each game is deployed to its own Cloudflare Pages project and
+# the parent dashboard uses URL Transform Rules to forward
+# `maxithome.com/games/memory/flashmatrix/*` to that project. For monorepo
+# MVP delivery, the static files are co-located and the same-origin
+# guarantee is preserved by serving them from the same deployment.

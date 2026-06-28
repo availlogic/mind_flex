@@ -1,0 +1,156 @@
+/* MindFlex — Components
+ * Source of truth: docs/Visual-Guidelines.md §4
+ */
+
+/* Cards */
+.mf-card {
+  background: var(--mf-card-bg);
+  border: 1px solid var(--mf-border);
+  border-radius: var(--mf-radius);
+  padding: 1.25rem;
+  backdrop-filter: var(--mf-blur);
+  cursor: pointer;
+  transition: transform var(--mf-transition), border-color var(--mf-transition);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 180px;
+}
+
+.mf-card:hover, .mf-card:focus-visible {
+  transform: scale(1.03);
+  border-color: var(--mf-accent-memory);
+  outline: none;
+}
+
+.mf-card--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mf-card__title {
+  font-size: var(--mf-fs-h2);
+  font-weight: 600;
+  line-height: var(--mf-lh-h2);
+}
+
+.mf-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: var(--mf-fs-muted);
+  color: var(--mf-text-muted);
+}
+
+.mf-card__best {
+  font-family: var(--mf-font-mono);
+  font-size: var(--mf-fs-digits);
+  color: var(--mf-accent-memory);
+  margin-top: auto;
+}
+
+/* Badges (pill-shaped) */
+.mf-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: var(--mf-fs-muted);
+  border-radius: var(--mf-radius-pill);
+  border: 1px solid currentColor;
+}
+
+.mf-badge--memory { color: var(--mf-accent-memory); background: rgba(0, 229, 255, 0.12); }
+.mf-badge--focus  { color: var(--mf-accent-focus);  background: rgba(57, 255, 20, 0.12); }
+.mf-badge--logic  { color: var(--mf-accent-logic);  background: rgba(191, 64, 255, 0.12); }
+.mf-badge--speed  { color: var(--mf-accent-speed);  background: rgba(255, 165, 0, 0.12); }
+.mf-badge--spatial{ color: var(--mf-accent-spatial);background: rgba(255, 36, 71, 0.12); }
+
+/* Buttons */
+.mf-button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid var(--mf-border);
+  color: var(--mf-text);
+  border-radius: var(--mf-radius);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--mf-fs-body);
+  transition: border-color var(--mf-transition), color var(--mf-transition), background var(--mf-transition);
+}
+
+.mf-button:hover, .mf-button:focus-visible {
+  border-color: var(--mf-accent-memory);
+  color: var(--mf-accent-memory);
+  outline: none;
+}
+
+.mf-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mf-button--primary {
+  background: var(--mf-bg);
+  border-color: var(--mf-accent-memory);
+  color: var(--mf-accent-memory);
+  box-shadow: var(--mf-glow);
+}
+
+.mf-button--danger {
+  border-color: var(--mf-accent-spatial);
+  color: var(--mf-accent-spatial);
+}
+
+/* Streak panel */
+.mf-streak {
+  font-family: var(--mf-font-mono);
+  font-size: var(--mf-fs-digits);
+  color: var(--mf-accent-focus);
+  text-shadow: 0 0 8px rgba(57, 255, 20, 0.4);
+}
+
+/* Form fields (recovery import) */
+.mf-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  background: var(--mf-bg);
+  border: 1px solid var(--mf-border);
+  color: var(--mf-text);
+  border-radius: var(--mf-radius);
+  font-family: var(--mf-font-mono);
+  font-size: var(--mf-fs-body);
+}
+
+.mf-input:focus-visible {
+  outline: 2px dashed var(--mf-accent-memory);
+  outline-offset: 2px;
+  border-color: var(--mf-accent-memory);
+}
+
+.mf-error {
+  color: var(--mf-accent-spatial);
+  font-size: var(--mf-fs-muted);
+  margin-top: 0.5rem;
+}
+
+/* AI Threat zone highlight on radar */
+.mf-radar {
+  --ai-threat-stroke: var(--mf-accent-spatial);
+}
+
+/* Loading skeleton */
+.mf-skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--mf-radius);
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
