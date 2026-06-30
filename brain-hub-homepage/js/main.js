@@ -225,6 +225,7 @@ async function onScoreSubmitted(result) {
     renderRadarChart(currentProfile);
     renderDailyTracker(currentProfile);
     renderStreak(currentProfile);
+    renderOverlayProfile(currentProfile);
     ticker.pushMessage(`Anonymous profile crossed ${currentProfile.scores.memory} memory!`);
   }
 }

@@ -18,6 +18,7 @@ export class ProfileOverlay {
     this.importErrorEl = root.querySelector('[data-mf-role="import-error"]');
     this.closeBtn = root.querySelector('[data-mf-role="close-overlay"]');
     this.deleteBtn = root.querySelector('[data-mf-role="delete-data"]');
+    this.streakEl = root.querySelector('#mf-overlay-streak');
     // Confirm modal lives at document scope (sibling of overlay) so its
     // querySelector searches the whole document.
     const doc = root.ownerDocument || document;
@@ -83,6 +84,10 @@ export class ProfileOverlay {
   setProfile(profile) {
     if (this.tokenEl && profile && profile.recovery_token) {
       this.tokenEl.textContent = profile.recovery_token;
+    }
+    if (this.streakEl && profile) {
+      const streak = profile.current_streak || 0;
+      this.streakEl.textContent = `${streak} day${streak === 1 ? '' : 's'}`;
     }
     if (this.tokenEl && profile && profile.badges) {
       // No-op for MVP; reserved for future badges display.

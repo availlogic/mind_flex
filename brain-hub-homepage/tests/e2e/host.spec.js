@@ -177,4 +177,9 @@ test('E2E: completing a game updates streak and daily progress tracker in UI', a
   // UI should update to show 1 day streak and 1/3 daily goal progress
   await expect(page.locator('#mf-streak')).toHaveText('1 day');
   await expect(page.locator('#mf-daily-progress')).toHaveText('1/3');
+
+  // Open overlay and verify streak is updated there too
+  await page.locator('#mf-avatar').click();
+  await expect(page.locator('#mf-overlay')).toHaveClass(/mf-overlay--visible/);
+  await expect(page.locator('#mf-overlay-streak')).toHaveText('1 day');
 });
