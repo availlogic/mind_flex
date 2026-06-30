@@ -233,88 +233,105 @@ To add the Cloudflare Tunnel to the same Compose file:
 ```yaml
   cloudflared:
     image: cloudflare/cloudflared:2024.10.0
+    container_name: mindflex-tunnel
+    restart: unless-stopped
     command: tunnel --no-autoupdate run
-    environment:
-      TUNNEL_TOKEN: ${TUNNEL_TOKEN}
+    volumes:
+      - ../cloudflared:/etc/cloudflared:ro
     depends_on:
       - nginx
-    networks: [mindflex_net]
+    networks:
+      - mindflex_net
 ```
 
 ## Production Deployment Steps
 
-### 1. Provision Cloudflare
+### 1. Provision Cloudflare Pages & Worker Router
 
 ```bash
 # Install wrangler locally
 npm install -g wrangler
 wrangler login
 
-# Create two Pages projects
-wrangler pages project create brain-hub-homepage
-wrangler pages project create game-memory-flashmatrix
+# Deploy Pages projects
+cd brain-hub-homepage
+wrangler pages deploy . --project-name=brain-hub-homepage
+cd ../game-memory-flashmatrix
+wrangler pages deploy . --project-name=game-memory-flashmatrix
 
-# Add secrets to GitHub
-gh secret set CLOUDFLARE_API_TOKEN --body "<api-token>"
-gh secret set CLOUDFLARE_ACCOUNT_ID --body "<account-id>"
+# Create a Cloudflare Worker named `mindflex-router`
+# and write the routing proxy script (see artifacts/cloudflare-url-rewrites.md)
 ```
 
-### 2. Connect custom hostname
+### 2. Connect custom domains and Worker routes
 
 In the Cloudflare dashboard:
-1. Workers & Pages → `brain-hub-homepage` → Custom domains → `maxithome.com`
-2. Add URL Transform Rules (see `docs/cloudflare-url-rewrites.md`).
+1. Bind custom subdomain `mindflex-hub.maxithome.com` to the `mindflex-router` Worker (via Worker -> Domains -> Add Custom Domain).
+2. Or configure a Worker Route: `mindflex-hub.maxithome.com/*` mapped to `mindflex-router` Worker.
+3. This ensures all requests to the dashboard and games go through the Worker first, which strips the prefix and forwards requests to Pages and backend APIs while maintaining a strict same-origin.
 
-### 3. Provision the Ubuntu server
+### 3. Provision the Server
 
 ```bash
-# On the Ubuntu server:
+# On the backend host/server:
 sudo apt update && sudo apt install -y docker.io docker-compose-v2
 sudo usermod -aG docker $USER
 # Logout/login for group changes.
 
-git clone <repo-url> mind_flex && cd mind_flex/backend
+git clone <repo-url> mind_flex && cd mind_flex
 ```
 
-### 4. Configure the Cloudflare Tunnel
+### 4. Track Empty `cloudflared` Folder safely
+To prevent credentials leak while keeping the folder structure in Git:
+1. Create an empty `cloudflared/.gitkeep` file.
+2. Add the following to the root `.gitignore`:
+   ```gitignore
+   cloudflared/*
+   !cloudflared/.gitkeep
+   ```
+
+### 5. Configure the Cloudflare Tunnel
 
 ```bash
 # On a workstation with cloudflared installed:
 cloudflared tunnel login
-cloudflared tunnel create mindflex-prod
-cloudflared tunnel route dns mindflex-prod api.maxithome.com
+cloudflared tunnel create mindflex-prod-tunnel
+cloudflared tunnel route dns mindflex-prod-tunnel mindflex-api.maxithome.com
 
-# Copy credentials to server (do NOT commit):
-scp ~/.cloudflared/<TUNNEL_ID>.json user@server:/opt/mindflex/cloudflared/
-scp backend/cloudflared/config.example.yml user@server:/opt/mindflex/cloudflared/config.yml
+# Copy credentials to the project directory on the server (do NOT commit):
+mkdir -p <project_root>/cloudflared
+cp ~/.cloudflared/<TUNNEL_ID>.json <project_root>/cloudflared/
+cp backend/cloudflared/config.example.yml <project_root>/cloudflared/config.yml
 ```
 
-On the server:
-```bash
-mkdir -p /opt/mindflex/cloudflared
-# Place credentials.json and config.yml there.
-```
+Edit `<project_root>/cloudflared/config.yml` on the server:
+- Replace `<TUNNEL_ID>` with your actual tunnel UUID.
+- Ensure the `credentials-file` resolves to `/etc/cloudflared/<TUNNEL_ID>.json` inside the container.
+- Route `hostname: mindflex-api.maxithome.com` to `service: http://nginx:8080`.
 
-### 5. Bring everything up
+### 6. Bring everything up
 
+In the backend folder:
 ```bash
-cd /opt/mindflex/backend
+cd backend
+# Port 8080 conflict resolution: If port 8080 is already allocated on the host, 
+# modify nginx ports mapping in docker-compose.yml to "8085:8080" (tunnel routes internally and remains unaffected).
 docker compose up -d --build
 ```
-
-### 6. Set up Cloudflare Transform Rules
-
-In the Cloudflare dashboard for `maxithome.com`:
-- Add a rule matching `^/games/memory/flashmatrix(/.*)?$` → Rewrite → `https://game-memory-flashmatrix.pages.dev${1}`
-- (Optional) Cache static assets aggressively under `/sdk/`.
 
 ### 7. Verify
 
 ```bash
-# From a fresh client:
-curl -I https://maxithome.com/                # should return 200 from brain-hub-homepage
-curl -I https://maxithome.com/games/memory/flashmatrix/index.html  # served via rewrite
-curl -X POST https://maxithome.com/api/v1/profiles -H 'Content-Type: application/json' -d '{"anonymous_user_id":"..."}'
+# Verify backend gateway health:
+curl -i https://mindflex-api.maxithome.com/healthz
+
+# Verify user profile registration:
+curl -i -X POST https://mindflex-api.maxithome.com/api/v1/profiles \
+  -H 'Content-Type: application/json' \
+  -d '{"anonymous_user_id":"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"}'
+
+# Verify same-origin static routes & local storage access:
+# Visit https://mindflex-hub.maxithome.com/ and start a game.
 ```
 
 ## Rollback Procedures

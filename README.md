@@ -120,18 +120,25 @@ npm run test
 
 ## Deployment Instructions
 
-### 1. Frontend Page Deployments
-*   Deploy `brain-hub-homepage` to Cloudflare Pages mapping to the root domain `maxithome.com`.
-*   Deploy each game (e.g., `game-memory-flashmatrix`) to its own Cloudflare Pages subdomain.
-*   Configure **Cloudflare Transform Rules (URL Rewriting)**:
-    *   Rule: Rewrite path `/games/memory/flashmatrix/*` to point to the sub-game's deployed Pages site.
-    *   This guarantees same-origin access (`maxithome.com`), enabling shared `LocalStorage` access.
+### 1. Cloudflare Routing Setup (Worker Router)
+*   Deploy `brain-hub-homepage` to Cloudflare Pages.
+*   Deploy each game (e.g., `game-memory-flashmatrix`) to its own Cloudflare Pages project.
+*   Deploy a **Cloudflare Worker** (e.g. `mindflex-router`) and bind it to `maxithome.com/*` (or test subdomain `mindflex-hub.maxithome.com/*`).
+*   The Worker intercepts requests and reverse-proxies:
+    *   `/api/*` -> API gateway (Cloudflare Tunnel at `mindflex-api.maxithome.com`).
+    *   `/games/memory/flashmatrix/*` -> Game Pages site (prefix stripped, serving from the root of `game-memory-flashmatrix.pages.dev`).
+    *   Everything else -> Dashboard Pages site (`brain-hub-homepage.pages.dev`).
+    *   *This preserves the same-origin constraint while overcoming standard URL Transform Rules hostname limitations.*
 
 ### 2. Backend Server Deployment
-The API servers run inside Docker on a domestic Ubuntu server connected via Cloudflare Tunnel.
+The API servers run inside Docker on a backend Ubuntu host connected via a containerized Cloudflare Tunnel.
 
 ```bash
-# Start Docker containers on Ubuntu Server
+# Place your credentials and config.yml in the root `cloudflared/` directory.
+# Track the directory structure safely using .gitkeep and .gitignore.
+
+# Start Docker containers in the backend directory
+cd backend
 docker compose up -d --build
 ```
 

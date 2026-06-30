@@ -80,7 +80,8 @@ def test_get_profile_applies_decay_after_72h(client, store):
     uid = "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
     client.post("/api/v1/profiles", json={"anonymous_user_id": uid})
     # Simulate a score and a last_active_at 100h ago.
-    old = datetime(2026, 6, 23, 0, 0, tzinfo=timezone.utc)
+    from datetime import timedelta
+    old = datetime.now(timezone.utc) - timedelta(hours=100)
     store.override_profile(uid, {
         "score_memory": 1000,
         "score_focus": 800,

@@ -48,8 +48,8 @@ The platform is decomposed into independent modules to ensure minimal coupling a
     *   *Technology*: HTML5 Canvas, Vanilla JS/WebGL, CSS lock.
 
 ### 2.2 Infrastructure & Routing Modules
-*   **Edge Router (Cloudflare Pages Rules)**:
-    *   *Responsibilities*: Rewrites paths such as `/games/memory/flashmatrix/*` to point to the distinct sub-game pages deployment origin. This forces the browser to treat games as same-origin relative to `maxithome.com`, unlocking access to the common `LocalStorage` partition.
+*   **Edge Router (Cloudflare Worker Router)**:
+    *   *Responsibilities*: Intercepts requests for `maxithome.com/*` and proxies path `/games/memory/flashmatrix/*` to the distinct sub-game Pages project origin (stripping the prefix) and `/api/*` to the API gateway (Cloudflare Tunnel). This forces the browser to treat both the dashboard and games as same-origin, unlocking shared access to the root domain's `LocalStorage` partition.
 *   **Tunneling Gateway (Cloudflare Tunnel & Nginx)**:
     *   *Responsibilities*: Cloudflare Tunnel forwards public API traffic (`/api/*`) to Nginx on the home server. Nginx acts as the local gateway, routing paths to the appropriate Docker containers.
 
@@ -124,9 +124,11 @@ Sub-Game (iframe)              Host Shell (maxithome.com)            API Gateway
 ```
                   Public Internet (Cloudflare CDN Edge)
 +--------------------------------------------------------------------------+
-|  maxithome.com (Dashboard)            /games/memory/flashmatrix/*        |
-|  [Cloudflare Pages Project A]    ──►  [Cloudflare Pages Project B]       |
-|                                       (URL Transform Rules: Same-Origin) |
+|  maxithome.com (Worker Router Entry Point)                               |
+|                       │ (Edge Proxy Routing)                             |
+|                       ├───► /games/* ──► [game-memory-flashmatrix Pages]  |
+|                       ├───► /api/*   ──► [mindflex-api Tunnel]           |
+|                       └───► /        ──► [brain-hub-homepage Pages]      |
 +----------------──────────────────┬───────────────────────────────────────+
                                    │
                                    │ (Tunnel: HTTPS / api/*)
