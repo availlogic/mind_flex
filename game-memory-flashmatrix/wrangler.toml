@@ -3,5 +3,5 @@ compatibility_date = "2025-09-01"
 pages_build_output_dir = "."
 
 # In a multi-repo deployment this project is published on its own Cloudflare
-# Pages subdomain; Cloudflare Transform Rules on maxithome.com forward
+# Pages subdomain; the Cloudflare Worker Router on maxithome.com dynamically forwards
 # /games/memory/flashmatrix/* here so the iframe is same-origin with the host.

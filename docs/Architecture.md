@@ -49,7 +49,7 @@ The platform is decomposed into independent modules to ensure minimal coupling a
 
 ### 2.2 Infrastructure & Routing Modules
 *   **Edge Router (Cloudflare Worker Router)**:
-    *   *Responsibilities*: Intercepts requests for `maxithome.com/*` and proxies path `/games/memory/flashmatrix/*` to the distinct sub-game Pages project origin (stripping the prefix) and `/api/*` to the API gateway (Cloudflare Tunnel). This forces the browser to treat both the dashboard and games as same-origin, unlocking shared access to the root domain's `LocalStorage` partition.
+    *   *Responsibilities*: Intercepts requests for `maxithome.com/*` and dynamically proxies paths of the form `/games/:tag/:game_id/*` to their corresponding sub-game Pages project at `game-:tag-:game_id.pages.dev` (stripping the prefix) and `/api/*` to the API gateway (Cloudflare Tunnel). This forces the browser to treat both the dashboard and games as same-origin, unlocking shared access to the root domain's `LocalStorage` partition.
 *   **Tunneling Gateway (Cloudflare Tunnel & Nginx)**:
     *   *Responsibilities*: Cloudflare Tunnel forwards public API traffic (`/api/*`) to Nginx on the home server. Nginx acts as the local gateway, routing paths to the appropriate Docker containers.
 
@@ -126,7 +126,7 @@ Sub-Game (iframe)              Host Shell (maxithome.com)            API Gateway
 +--------------------------------------------------------------------------+
 |  maxithome.com (Worker Router Entry Point)                               |
 |                       │ (Edge Proxy Routing)                             |
-|                       ├───► /games/* ──► [game-memory-flashmatrix Pages]  |
+|                       ├───► /games/:tag/:game_id/* ──► [game-:tag-:game_id Pages] |
 |                       ├───► /api/*   ──► [mindflex-api Tunnel]           |
 |                       └───► /        ──► [brain-hub-homepage Pages]      |
 +----------------──────────────────┬───────────────────────────────────────+

@@ -126,9 +126,9 @@ npm run test
 *   Deploy a **Cloudflare Worker** (e.g. `mindflex-router`) and bind it to `maxithome.com/*` (or test subdomain `mindflex-hub.maxithome.com/*`).
 *   The Worker intercepts requests and reverse-proxies:
     *   `/api/*` -> API gateway (Cloudflare Tunnel at `mindflex-api.maxithome.com`).
-    *   `/games/memory/flashmatrix/*` -> Game Pages site (prefix stripped, serving from the root of `game-memory-flashmatrix.pages.dev`).
+    *   `/games/:category/:game_id/*` -> Dynamic Game Pages site (prefix stripped, serving dynamically from the root of `game-:category-:game_id.pages.dev`, e.g., `/games/memory/flashmatrix/*` -> `game-memory-flashmatrix.pages.dev`).
     *   Everything else -> Dashboard Pages site (`brain-hub-homepage.pages.dev`).
-    *   *This preserves the same-origin constraint while overcoming standard URL Transform Rules hostname limitations.*
+    *   *This preserves the same-origin constraint while dynamically routing new games and overcoming standard URL Transform Rules hostname limitations.*
 
 ### 2. Backend Server Deployment
 The API servers run inside Docker on a backend Ubuntu host connected via a containerized Cloudflare Tunnel.

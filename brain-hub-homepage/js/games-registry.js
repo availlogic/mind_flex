@@ -1,8 +1,9 @@
 /* MindFlex — Static registry of available sub-games
  * Spec: docs/PRD.md §11.1.4 (Main Content Grid)
- *       docs/Architecture.md §5 (Cloudflare URL rewrites)
+ *       docs/Architecture.md §5 (Edge Router)
  *
- * Each game has a `path` that maps to the URL rewrite rule on Cloudflare.
+ * Each game has a `path` that maps to the dynamic Cloudflare Worker Router.
+ * The router maps `/games/:category/:game_id/*` to `game-:category-:game_id.pages.dev`.
  * MVP scope (PRD §20) ships only Flash Matrix under the Memory category.
  */
 

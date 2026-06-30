@@ -1,14 +1,3 @@
-# Cloudflare Routing & Worker Router Configurations
-
-To achieve a same-origin Multi-Page Application (MPA) where the dashboard and sub-games share the same browser storage (`LocalStorage`, `IndexedDB`), all requests must route through a single origin (e.g., `mindflex-hub.maxithome.com`).
-
-Since standard Cloudflare URL Transform Rules (Rewrite URL) are restricted to path rewriting on the same origin and cannot rewrite the target hostname to another Cloudflare Pages project, a **Cloudflare Worker** is used as a reverse proxy router.
-
-## 1. Cloudflare Worker Router Code (`mindflex-router`)
-
-Deploy a Cloudflare Worker with the following script (also maintained in [cloudflare-router.js](file:///Users/victorxu/projects/mind_flex/brain-hub-homepage/cloudflare-router.js)):
-
-```javascript
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -57,17 +46,3 @@ export default {
     return fetch(url.toString());
   }
 };
-```
-
-## 2. Trigger Routes
-In the Worker's **Domains** tab (or **Settings -> Triggers**), add the following:
-*   **Route**: `mindflex-hub.maxithome.com/*`
-*   **Zone**: `maxithome.com`
-
-This intercepts all traffic to the dashboard subdomain and runs the routing logic at the edge.
-
-## 3. Production Domains Setup
-*   **Worker Router**: Handles `https://mindflex-hub.maxithome.com`
-*   **Dashboard Pages (Target)**: `https://brain-hub-homepage.pages.dev`
-*   **Game Pages (Target)**: `https://game-{tag}-{game_id}.pages.dev` (e.g. `https://game-memory-flashmatrix.pages.dev` for `/games/memory/flashmatrix/`)
-*   **Backend API (Target)**: `https://mindflex-api.maxithome.com` (Cloudflare Tunnel CNAME -> `<TUNNEL_ID>.cfargotunnel.com`)

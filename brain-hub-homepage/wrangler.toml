@@ -8,7 +8,7 @@ pages_build_output_dir = "."
 #  - /sdk/mindflex-bridge.js -> shared SDK (served from /sdk/mindflex-bridge.js in this repo)
 #
 # In production, each game is deployed to its own Cloudflare Pages project and
-# the parent dashboard uses URL Transform Rules to forward
-# `maxithome.com/games/memory/flashmatrix/*` to that project. For monorepo
-# MVP delivery, the static files are co-located and the same-origin
-# guarantee is preserved by serving them from the same deployment.
+# the Cloudflare Worker Router (mindflex-router) dynamically forwards
+# `maxithome.com/games/:tag/:game_id/*` to `game-:tag-:game_id.pages.dev`.
+# For monorepo MVP delivery, the static files are co-located and the
+# same-origin guarantee is preserved by serving them from the same deployment.
