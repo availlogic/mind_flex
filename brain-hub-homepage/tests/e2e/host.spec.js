@@ -145,3 +145,36 @@ test('E2E-SC-03: Delete All Data clears local storage after confirmation', async
   const r = await delReq;
   expect(r.method()).toBe('DELETE');
 });
+
+test('E2E: completing a game updates streak and daily progress tracker in UI', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#mf-streak')).toHaveText('0 days');
+  await expect(page.locator('#mf-daily-progress')).toHaveText('0/3');
+
+  // Open the game stage so it listens to game over messages
+  await page.locator('[data-game-id="flashmatrix"]').click();
+  await expect(page.locator('#mf-stage')).toBeVisible();
+
+  // Trigger game over via window.postMessage
+  await page.evaluate(() => {
+    window.postMessage({
+      type: 'MINDFLEX_GAME_OVER',
+      payload: {
+        score: 850,
+        timestamp: Date.now(),
+        details: {
+          accuracy: 0.95,
+          responseTimeMs: 320,
+          roundsCompleted: 8,
+        },
+      },
+    }, window.location.origin);
+  });
+
+  // The stage should close automatically upon completion
+  await expect(page.locator('#mf-stage')).not.toBeVisible();
+
+  // UI should update to show 1 day streak and 1/3 daily goal progress
+  await expect(page.locator('#mf-streak')).toHaveText('1 day');
+  await expect(page.locator('#mf-daily-progress')).toHaveText('1/3');
+});

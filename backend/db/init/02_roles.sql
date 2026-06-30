@@ -27,7 +27,7 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA schema_memory_matrix TO game_memo
 -- Schema_common: USAGE so the role can resolve function references;
 -- column-level SELECT on user_profiles only (no UPDATE/DELETE direct grants).
 GRANT USAGE ON SCHEMA schema_common TO game_memory_matrix_svc;
-GRANT SELECT (anonymous_user_id, score_memory, score_focus, score_logic, score_speed, score_spatial)
+GRANT SELECT (anonymous_user_id, score_memory, score_focus, score_logic, score_speed, score_spatial, current_streak)
   ON schema_common.user_profiles TO game_memory_matrix_svc;
 
 -- Common service also needs to read its own game sessions occasionally for restore flow,

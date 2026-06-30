@@ -5,14 +5,22 @@
 
 CREATE OR REPLACE FUNCTION schema_common.update_memory_score(
     target_user_id UUID,
-    new_game_score INTEGER
+    new_game_score INTEGER,
+    tz_offset_minutes INTEGER DEFAULT 0
 ) RETURNS VOID AS $$
 DECLARE
     current_rating INTEGER;
     rating_increment INTEGER;
     calculated_rating INTEGER;
+
+    today DATE;
+    prev_streak INTEGER;
+    prev_date DATE;
+    delta_days INTEGER;
+    new_streak INTEGER;
 BEGIN
-    SELECT score_memory INTO current_rating
+    SELECT score_memory, current_streak, daily_goal_date
+    INTO current_rating, prev_streak, prev_date
     FROM schema_common.user_profiles
     WHERE anonymous_user_id = target_user_id;
 
@@ -26,8 +34,29 @@ BEGIN
             calculated_rating := 0;
         END IF;
 
+        today := (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' + (INTERVAL '1 minute' * tz_offset_minutes))::date;
+
+        IF prev_date IS NULL THEN
+            new_streak := 1;
+        ELSIF prev_date = today THEN
+            new_streak := GREATEST(1, prev_streak);
+        ELSE
+            delta_days := today - prev_date;
+            IF delta_days = 1 THEN
+                new_streak := prev_streak + 1;
+            ELSE
+                new_streak := 1;
+            END IF;
+        END IF;
+
         UPDATE schema_common.user_profiles
         SET score_memory = calculated_rating,
+            current_streak = new_streak,
+            daily_games_played = CASE
+                WHEN daily_goal_date = today THEN daily_games_played + 1
+                ELSE 1
+            END,
+            daily_goal_date = today,
             last_active_at = CURRENT_TIMESTAMP
         WHERE anonymous_user_id = target_user_id;
     END IF;

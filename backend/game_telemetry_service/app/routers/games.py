@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Depends, HTTPException, Path, status, Header
 from fastapi.responses import JSONResponse
 
 from ..db import ProfileLookup, TelemetryStore
@@ -37,6 +37,7 @@ def _err(status_code: int, code: str, message: str, details: Dict[str, Any] | No
 async def submit_game(
     game_name: str = Path(...),
     payload: SubmitGameRequest = ...,
+    x_client_timezone_offset: str | None = Header(None, alias="X-Client-Timezone-Offset"),
     store: TelemetryStore = Depends(get_telemetry_store),
     profile_lookup: ProfileLookup = Depends(get_profile_lookup),
 ):
@@ -68,6 +69,16 @@ async def submit_game(
             {"anonymous_user_id": payload.anonymous_user_id},
         )
 
+    # Parse timezone offset
+    tz_offset = 0
+    if x_client_timezone_offset is not None:
+        try:
+            tz_offset = int(x_client_timezone_offset)
+        except ValueError:
+            pass
+        if tz_offset < -14 * 60 or tz_offset > 14 * 60:
+            tz_offset = 0
+
     # 1) Persist session atomically (transaction in store impl).
     #    If the client_tx_id has been seen before, the store returns the
     #    existing session row and we skip re-scoring to preserve idempotency
@@ -90,11 +101,12 @@ async def submit_game(
     # 2) Invoke the SECURE DEFINER memory-score procedure (or fallback).
     if was_new:
         await profile_lookup.apply_memory_score_and_read(
-            str(user_id), payload.score
+            str(user_id), payload.score, tz_offset
         )
 
     # 3) Read back the full score vector for the response payload.
     scores = await profile_lookup.read_full_scores(str(user_id))
+    current_streak = await profile_lookup.read_streak(str(user_id))
 
     new_score = scores.get("memory", 0)
     badge_unlocked = new_score >= 800 and payload.score >= 800
@@ -112,6 +124,6 @@ async def submit_game(
         updatedScores=UpdatedScores(**scores),
         newBadgeUnlocked=badge_unlocked,
         unlockedBadges=unlocked_badges,
-        current_streak=1,
+        current_streak=current_streak,
     )
     return JSONResponse(status_code=200, content=response.model_dump())

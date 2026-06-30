@@ -146,3 +146,11 @@ def test_submit_rolls_back_when_store_raises_during_click_insert(client, store, 
     assert len(store.sessions) == 0
     # The profile memory score must NOT have been mutated.
     assert profile_lookup.scores.get("memory") == 500
+
+
+def test_submit_passes_timezone_offset_header(client, profile_lookup):
+    headers = {"X-Client-Timezone-Offset": "480"}
+    resp = client.post("/api/v1/games/flashmatrix/submit", json=_payload(), headers=headers)
+    assert resp.status_code == 200
+    assert profile_lookup.last_tz_offset_minutes == 480
+    assert resp.json()["current_streak"] == 1

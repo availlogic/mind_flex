@@ -219,6 +219,7 @@ async function onScoreSubmitted(result) {
   if (result && result.updatedScores && currentProfile) {
     currentProfile.scores = result.updatedScores;
     currentProfile.current_streak = result.current_streak || currentProfile.current_streak || 0;
+    currentProfile.daily_games_played = (currentProfile.daily_games_played || 0) + 1;
     cacheProfile(currentProfile.anonymous_user_id, currentProfile);
     renderRating(currentProfile);
     renderRadarChart(currentProfile);

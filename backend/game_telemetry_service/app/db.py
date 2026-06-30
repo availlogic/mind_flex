@@ -33,29 +33,37 @@ class ProfileLookup:
     game svc role's column-level SELECT permission on user_profiles.
     """
 
-    async def apply_memory_score_and_read(self, user_id: str, game_score: int) -> int: ...
+    async def apply_memory_score_and_read(self, user_id: str, game_score: int, tz_offset_minutes: int = 0) -> int: ...
     async def read_full_scores(self, user_id: str) -> Dict[str, int]: ...
+    async def read_streak(self, user_id: str) -> int: ...
 
 
 @dataclass
 class InMemoryProfileLookup(ProfileLookup):
     initial_scores: Dict[str, int] = field(default_factory=dict)
     scores: Dict[str, int] = field(default_factory=dict)
+    current_streak: int = 0
+    last_tz_offset_minutes: Optional[int] = None
 
     def __post_init__(self):
         base = {"memory": 0, "focus": 0, "logic": 0, "speed": 0, "spatial": 0}
         base.update(self.initial_scores)
         self.scores = base
 
-    async def apply_memory_score_and_read(self, user_id: str, game_score: int) -> int:
+    async def apply_memory_score_and_read(self, user_id: str, game_score: int, tz_offset_minutes: int = 0) -> int:
         from .services.scoring import compute_memory_rating_delta
         current = self.scores.get("memory", 0)
         new_rating = compute_memory_rating_delta(current=current, game=game_score)
         self.scores["memory"] = new_rating
+        self.last_tz_offset_minutes = tz_offset_minutes
+        self.current_streak = 1  # Mock updated streak
         return new_rating
 
     async def read_full_scores(self, user_id: str) -> Dict[str, int]:
         return dict(self.scores)
+
+    async def read_streak(self, user_id: str) -> int:
+        return self.current_streak
 
 
 @dataclass
@@ -223,12 +231,13 @@ class PostgresProfileLookup(ProfileLookup):
         if self._pool:
             await self._pool.close()
 
-    async def apply_memory_score_and_read(self, user_id: str, game_score: int) -> int:
+    async def apply_memory_score_and_read(self, user_id: str, game_score: int, tz_offset_minutes: int = 0) -> int:
         async with self._pool.acquire() as conn:  # type: ignore[union-attr]
             await conn.execute(
-                "SELECT schema_common.update_memory_score($1, $2)",
+                "SELECT schema_common.update_memory_score($1, $2, $3)",
                 uuid.UUID(user_id),
                 game_score,
+                tz_offset_minutes,
             )
             row = await conn.fetchrow(
                 """
@@ -258,3 +267,14 @@ class PostgresProfileLookup(ProfileLookup):
                 "speed": row["score_speed"],
                 "spatial": row["score_spatial"],
             }
+
+    async def read_streak(self, user_id: str) -> int:
+        async with self._pool.acquire() as conn:  # type: ignore[union-attr]
+            row = await conn.fetchrow(
+                """
+                SELECT current_streak FROM schema_common.user_profiles
+                WHERE anonymous_user_id = $1
+                """,
+                uuid.UUID(user_id),
+            )
+            return int(row["current_streak"]) if row else 0
