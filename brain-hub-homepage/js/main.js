@@ -243,13 +243,29 @@ async function bootstrapProfile() {
   }
 
   try {
-    const profile = await api.createProfile(uid).catch(async (err) => {
-      // 409 = already registered; try GET instead.
-      if (err && err.status === 409) {
-        return await api.getProfile(uid);
+    let profile;
+    if (cached) {
+      // If we have cached profile locally, it means we already registered.
+      // Call GET first to avoid unnecessary POST 409 network conflict logs in console.
+      try {
+        profile = await api.getProfile(uid);
+      } catch (err) {
+        if (err && err.status === 404) {
+          // If the profile was deleted from server or not found, recreate it.
+          profile = await api.createProfile(uid);
+        } else {
+          throw err;
+        }
       }
-      throw err;
-    });
+    } else {
+      // New user, POST to create it.
+      profile = await api.createProfile(uid).catch(async (err) => {
+        if (err && err.status === 409) {
+          return await api.getProfile(uid);
+        }
+        throw err;
+      });
+    }
     currentProfile = profile;
     cacheProfile(uid, profile);
     renderGames(currentProfile);

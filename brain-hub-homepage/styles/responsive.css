@@ -24,8 +24,18 @@
   }
 }
 
+/* Tablet & Desktop: ≥ 768px — hide top tags bar */
+@media (min-width: 768px) {
+  .mf-main__filters {
+    display: none;
+  }
+}
+
 /* Mobile: < 768px — sidebar hidden, grid 1-2 columns */
 @media (max-width: 767px) {
+  .mf-sidebar__group--tags {
+    display: none;
+  }
   .mf-topbar {
     height: var(--mf-topbar-h-mobile);
     padding: 0 1rem;

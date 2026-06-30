@@ -10,12 +10,12 @@
 ### 1.2 Layout & Hierarchy
 *   **Layout Sections**:
     1.  **Top Navigation Bar**: Permanent header containing branding, global rating, live ticker, and user avatar.
-    2.  **Left Sidebar (Desktop Only)**: Collapsible navigation containing tag filters and daily objectives tracker.
-    3.  **Main Content Grid**: Scrollable grid displaying responsive game cards.
+    2.  **Left Sidebar (Desktop / Tablet)**: Collapsible navigation containing tag filters (visible on desktop/tablet, hidden on mobile) and daily objectives tracker.
+    3.  **Main Content Grid**: Scrollable grid displaying responsive game cards, with a top horizontal tags filter bar that is visible on mobile and tablet but hidden on desktop.
 *   **Responsive Behavior**:
-    *   *Desktop (≥1024px)*: Left sidebar visible. Main grid shows 4–6 columns.
-    *   *Tablet (768px - 1023px)*: Sidebar collapses to icon-only. Grid shows 3 columns.
-    *   *Mobile (<768px)*: Sidebar completely hidden (collapses into top bar hamburger drawer). Grid shows 1–2 columns.
+    *   *Desktop (≥1024px)*: Left sidebar visible with full tag filters. Top horizontal tags filter bar is hidden. Main grid shows 4–6 columns.
+    *   *Tablet (768px - 1023px)*: Sidebar collapses to icon-only (showing tag filter checkbox icons). Top horizontal tags filter bar is hidden (shares desktop logic). Grid shows 3 columns.
+    *   *Mobile (<768px)*: Sidebar completely hidden (collapses into top bar hamburger drawer) and left sidebar tag filters are hidden inside the drawer. Top horizontal tags filter bar is visible on the main page. Grid shows 1–2 columns.
 
 ### 1.3 Key Components
 *   **Global Rating Badge**:
