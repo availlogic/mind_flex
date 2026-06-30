@@ -160,7 +160,8 @@ async function openGameStage(game) {
   currentGameId = game.id;
 
   // Build iframe per Architecture §4.1
-  frameWrap.innerHTML = '';
+  const oldIframe = frameWrap.querySelector('iframe');
+  if (oldIframe) oldIframe.remove();
   const iframe = document.createElement('iframe');
   iframe.src = game.path;
   iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
@@ -203,7 +204,10 @@ function closeGameStage() {
   const frameWrap = document.getElementById('mf-stage-frame');
   if (lobby) lobby.style.display = '';
   if (stage) stage.style.display = 'none';
-  if (frameWrap) frameWrap.innerHTML = '';
+  if (frameWrap) {
+    const iframe = frameWrap.querySelector('iframe');
+    if (iframe) iframe.remove();
+  }
   currentGameId = null;
   if (bridgeCtl) {
     bridgeCtl.stop();
