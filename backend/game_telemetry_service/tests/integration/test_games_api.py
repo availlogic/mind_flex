@@ -74,10 +74,11 @@ def test_submit_returns_200_and_updated_scores(client):
     assert "current_streak" in body
 
 
-def test_submit_unknown_game_returns_404(client):
-    resp = client.post("/api/v1/games/nonexistentgame/submit", json=_payload())
-    assert resp.status_code == 404
-    assert resp.json()["error"]["code"] == "RESOURCE_NOT_FOUND"
+def test_submit_invalid_game_name_returns_400(client):
+    resp = client.post("/api/v1/games/invalid$name/submit", json=_payload())
+    assert resp.status_code == 400
+    assert resp.json()["error"]["code"] == "INVALID_PARAMETER"
+
 
 
 def test_submit_out_of_bounds_score_returns_400(client):

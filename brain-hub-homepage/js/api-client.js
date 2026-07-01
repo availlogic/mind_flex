@@ -97,8 +97,10 @@ export async function submitGameScore(uid, gameName, payload, opts = {}) {
     accuracy: payload.accuracy,
     responseTimeMs: payload.responseTimeMs,
     roundsCompleted: payload.roundsCompleted,
+    category: payload.category || 'memory',
     rawMetrics: payload.rawMetrics || { clicks: [] },
   };
+
   try {
     const result = await fetchJSON(
       `/api/v1/games/${encodeURIComponent(gameName)}/submit`,

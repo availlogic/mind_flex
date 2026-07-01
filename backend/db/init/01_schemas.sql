@@ -49,9 +49,28 @@ CREATE TABLE schema_memory_matrix.game_clicks (
     latency_ms INTEGER NOT NULL CHECK (latency_ms >= 0)
 );
 
+CREATE TABLE schema_common.game_sessions (
+    session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    anonymous_user_id UUID NOT NULL REFERENCES schema_common.user_profiles(anonymous_user_id) ON DELETE CASCADE,
+    game_id VARCHAR(64) NOT NULL,
+    category VARCHAR(64) NOT NULL,
+    score INTEGER NOT NULL CHECK (score >= 0),
+    accuracy NUMERIC(5, 2) NOT NULL CHECK (accuracy BETWEEN 0.00 AND 100.00),
+    avg_response_time_ms INTEGER NOT NULL CHECK (avg_response_time_ms >= 0),
+    rounds_completed INTEGER NOT NULL CHECK (rounds_completed >= 0),
+    client_tx_id UUID NOT NULL UNIQUE,
+    raw_metrics JSONB DEFAULT '{}'::jsonb NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
 CREATE INDEX idx_profiles_recovery_token ON schema_common.user_profiles(recovery_token);
 CREATE INDEX idx_profiles_last_active ON schema_common.user_profiles(last_active_at DESC);
 CREATE INDEX idx_badges_user_id ON schema_common.user_badges(anonymous_user_id);
 CREATE INDEX idx_matrix_sessions_user_id ON schema_memory_matrix.game_sessions(anonymous_user_id);
 CREATE INDEX idx_matrix_sessions_tx_id ON schema_memory_matrix.game_sessions(client_tx_id);
 CREATE INDEX idx_matrix_clicks_session_id ON schema_memory_matrix.game_clicks(session_id);
+
+CREATE INDEX idx_generic_sessions_user_id ON schema_common.game_sessions(anonymous_user_id);
+CREATE INDEX idx_generic_sessions_tx_id ON schema_common.game_sessions(client_tx_id);
+CREATE INDEX idx_generic_sessions_game_id ON schema_common.game_sessions(game_id);
+

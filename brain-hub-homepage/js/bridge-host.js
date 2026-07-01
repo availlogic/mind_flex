@@ -102,7 +102,9 @@ export async function dispatchGameOver(uid, gameName, envelope, submitter = subm
     accuracy: Number(details.accuracy) || 0,
     responseTimeMs: Number(details.responseTimeMs) || 0,
     roundsCompleted: Number(details.roundsCompleted) || 0,
+    category: envelope.category || details.category || 'memory',
     rawMetrics: details.rawMetrics || { clicks: [] },
   };
   return submitter(uid, gameName, payload);
 }
+

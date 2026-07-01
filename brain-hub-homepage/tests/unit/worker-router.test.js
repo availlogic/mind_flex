@@ -100,4 +100,35 @@ describe('Cloudflare Worker Router', () => {
     const [calledUrl] = globalFetch.mock.calls[0];
     expect(calledUrl).toBe('https://brain-hub-homepage.pages.dev/');
   });
+
+  it('intercepts /api/v1/games/registry and returns game list from KV or default fallback', async () => {
+    const mockKv = {
+      get: vi.fn().mockResolvedValue(JSON.stringify([{ id: 'customgame', category: 'speed' }])),
+    };
+    const request = new Request('https://mindflex-hub.maxithome.com/api/v1/games/registry', {
+      method: 'GET',
+    });
+
+    const response = await worker.fetch(request, { MINDFLEX_REGISTRY: mockKv });
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body[0].id).toBe('customgame');
+    expect(mockKv.get).toHaveBeenCalledWith('games_list');
+  });
+
+  it('uses default fallback if KV returns null', async () => {
+    const mockKv = {
+      get: vi.fn().mockResolvedValue(null),
+    };
+    const request = new Request('https://mindflex-hub.maxithome.com/api/v1/games/registry', {
+      method: 'GET',
+    });
+
+    const response = await worker.fetch(request, { MINDFLEX_REGISTRY: mockKv });
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body[0].id).toBe('flashmatrix');
+    expect(mockKv.get).toHaveBeenCalledWith('games_list');
+  });
 });
+

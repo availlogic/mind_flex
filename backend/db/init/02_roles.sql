@@ -29,6 +29,8 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA schema_memory_matrix TO game_memo
 GRANT USAGE ON SCHEMA schema_common TO game_memory_matrix_svc;
 GRANT SELECT (anonymous_user_id, score_memory, score_focus, score_logic, score_speed, score_spatial, current_streak)
   ON schema_common.user_profiles TO game_memory_matrix_svc;
+GRANT SELECT, INSERT ON schema_common.game_sessions TO game_memory_matrix_svc;
+
 
 -- Common service also needs to read its own game sessions occasionally for restore flow,
 -- but does NOT need to read granular clicks. No cross-schema grants for clicks.

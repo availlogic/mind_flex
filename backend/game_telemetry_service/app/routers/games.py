@@ -23,8 +23,6 @@ from ..schemas import (
 from ..services.anti_cheat import OutOfBoundsError, validate_score_payload
 
 
-SUPPORTED_GAMES = {"flashmatrix"}
-
 router = APIRouter(prefix="/api/v1/games")
 
 
@@ -41,12 +39,23 @@ async def submit_game(
     store: TelemetryStore = Depends(get_telemetry_store),
     profile_lookup: ProfileLookup = Depends(get_profile_lookup),
 ):
-    if game_name not in SUPPORTED_GAMES:
+    # Validate game name string to prevent basic SQL injection
+    import re
+    if not re.match(r"^[a-zA-Z0-9_-]+$", game_name):
         raise _err(
-            status.HTTP_404_NOT_FOUND,
-            "RESOURCE_NOT_FOUND",
-            f"Unknown game '{game_name}'.",
+            status.HTTP_400_BAD_REQUEST,
+            "INVALID_PARAMETER",
+            f"Invalid game name format: '{game_name}'. Must be alphanumeric with hyphens or underscores.",
             {"game_name": game_name},
+        )
+
+    category = payload.category
+    if category not in {"memory", "focus", "logic", "speed", "spatial"}:
+        raise _err(
+            status.HTTP_400_BAD_REQUEST,
+            "INVALID_PARAMETER",
+            f"Invalid game category '{category}'. Must be one of memory, focus, logic, speed, spatial.",
+            {"category": category},
         )
 
     try:
@@ -80,16 +89,15 @@ async def submit_game(
             tz_offset = 0
 
     # 1) Persist session atomically (transaction in store impl).
-    #    If the client_tx_id has been seen before, the store returns the
-    #    existing session row and we skip re-scoring to preserve idempotency
-    #    semantics required by AUD-03.
     was_new = True
+    payload_dict = payload.model_dump()
+    payload_dict["game_id"] = game_name
     try:
         existing = await store.lookup_existing_session(payload.client_tx_id)
         if existing is not None:
             was_new = False
         else:
-            await store.submit_session(payload.model_dump())
+            await store.submit_session(payload_dict)
     except Exception as exc:  # surface as 500 with INTERNAL_SERVER_ERROR
         raise _err(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -98,23 +106,23 @@ async def submit_game(
             {"game_name": game_name, "client_tx_id": payload.client_tx_id},
         )
 
-    # 2) Invoke the SECURE DEFINER memory-score procedure (or fallback).
+    # 2) Invoke the SECURE DEFINER score procedure (or fallback).
     if was_new:
-        await profile_lookup.apply_memory_score_and_read(
-            str(user_id), payload.score, tz_offset
+        await profile_lookup.apply_user_score_and_read(
+            str(user_id), payload.score, category, tz_offset
         )
 
     # 3) Read back the full score vector for the response payload.
     scores = await profile_lookup.read_full_scores(str(user_id))
     current_streak = await profile_lookup.read_streak(str(user_id))
 
-    new_score = scores.get("memory", 0)
+    new_score = scores.get(category, 0)
     badge_unlocked = new_score >= 800 and payload.score >= 800
     unlocked_badges: List[UnlockedBadge] = []
     if badge_unlocked:
         unlocked_badges.append(
             UnlockedBadge(
-                badge_type="MEM_SPEED_DEMON",
+                badge_type=f"{category.upper()}_SPEED_DEMON",
                 unlocked_at=datetime.now(timezone.utc).isoformat(),
             )
         )
@@ -127,3 +135,4 @@ async def submit_game(
         current_streak=current_streak,
     )
     return JSONResponse(status_code=200, content=response.model_dump())
+

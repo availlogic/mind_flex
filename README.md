@@ -19,6 +19,8 @@ For multi-device session migrations E2E paths, see [E2E-Test-Scenarios.md](file:
 For functional completeness definitions of done, see [Acceptance-Criteria.md](file:///Users/victorxu/projects/mind_flex/docs/Acceptance-Criteria.md).
 For project vision details, see [Vision.md](file:///Users/victorxu/projects/mind_flex/docs/Vision.md).
 For core rules and platform limits, see [Constraints.md](file:///Users/victorxu/projects/mind_flex/docs/Constraints.md).
+For instructions on developing and dynamically integrating new sub-games, see [Game-Integration-Guide.md](file:///Users/victorxu/projects/mind_flex/docs/Game-Integration-Guide.md).
+
 
 
 

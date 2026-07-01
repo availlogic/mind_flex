@@ -34,6 +34,7 @@ class ProfileLookup:
     """
 
     async def apply_memory_score_and_read(self, user_id: str, game_score: int, tz_offset_minutes: int = 0) -> int: ...
+    async def apply_user_score_and_read(self, user_id: str, game_score: int, category: str = "memory", tz_offset_minutes: int = 0) -> int: ...
     async def read_full_scores(self, user_id: str) -> Dict[str, int]: ...
     async def read_streak(self, user_id: str) -> int: ...
 
@@ -51,10 +52,13 @@ class InMemoryProfileLookup(ProfileLookup):
         self.scores = base
 
     async def apply_memory_score_and_read(self, user_id: str, game_score: int, tz_offset_minutes: int = 0) -> int:
+        return await self.apply_user_score_and_read(user_id, game_score, "memory", tz_offset_minutes)
+
+    async def apply_user_score_and_read(self, user_id: str, game_score: int, category: str = "memory", tz_offset_minutes: int = 0) -> int:
         from .services.scoring import compute_memory_rating_delta
-        current = self.scores.get("memory", 0)
+        current = self.scores.get(category, 0)
         new_rating = compute_memory_rating_delta(current=current, game=game_score)
-        self.scores["memory"] = new_rating
+        self.scores[category] = new_rating
         self.last_tz_offset_minutes = tz_offset_minutes
         self.current_streak = 1  # Mock updated streak
         return new_rating
@@ -82,12 +86,15 @@ class InMemoryTelemetryStore(TelemetryStore):
         session = {
             "session_id": session_id,
             "anonymous_user_id": payload["anonymous_user_id"],
+            "game_id": payload.get("game_id", "flashmatrix"),
+            "category": payload.get("category", "memory"),
             "score": payload["score"],
             # Convert proportion (0..1) -> percentage (0..100) per conflict C1.
             "accuracy": float(payload["accuracy"]) * 100.0,
             "avg_response_time_ms": payload["responseTimeMs"],
             "rounds_completed": payload["roundsCompleted"],
             "client_tx_id": payload["client_tx_id"],
+            "raw_metrics": payload.get("rawMetrics", {}),
             "created_at": datetime.now(timezone.utc),
         }
 
@@ -115,6 +122,7 @@ class InMemoryTelemetryStore(TelemetryStore):
             if s["client_tx_id"] == client_tx_id:
                 return s
         return None
+
 
 
 def build_telemetry_store_from_env() -> TelemetryStore:
@@ -161,55 +169,38 @@ class PostgresTelemetryStore(TelemetryStore):
             async with conn.transaction():
                 existing = await conn.fetchrow(
                     """
-                    SELECT * FROM schema_memory_matrix.game_sessions
+                    SELECT * FROM schema_common.game_sessions
                     WHERE client_tx_id = $1
                     """,
-                    payload["client_tx_id"],
+                    uuid.UUID(payload["client_tx_id"]),
                 )
                 if existing:
                     return dict(existing)
                 row = await conn.fetchrow(
                     """
-                    INSERT INTO schema_memory_matrix.game_sessions
-                      (anonymous_user_id, score, accuracy,
-                       avg_response_time_ms, rounds_completed, client_tx_id)
-                    VALUES ($1, $2, $3, $4, $5, $6)
+                    INSERT INTO schema_common.game_sessions
+                      (anonymous_user_id, game_id, category, score, accuracy,
+                       avg_response_time_ms, rounds_completed, client_tx_id, raw_metrics)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                     RETURNING *
                     """,
                     uuid.UUID(payload["anonymous_user_id"]),
+                    payload.get("game_id", "flashmatrix"),
+                    payload.get("category", "memory"),
                     payload["score"],
                     float(payload["accuracy"]) * 100.0,
                     payload["responseTimeMs"],
                     payload["roundsCompleted"],
                     uuid.UUID(payload["client_tx_id"]),
+                    json.dumps(payload.get("rawMetrics", {})),
                 )
-                session_id = row["session_id"]
-                clicks = payload.get("rawMetrics", {}).get("clicks", [])
-                if clicks:
-                    await conn.executemany(
-                        """
-                        INSERT INTO schema_memory_matrix.game_clicks
-                          (session_id, round_number, click_sequence, is_correct, latency_ms)
-                        VALUES ($1, $2, $3, $4, $5)
-                        """,
-                        [
-                            (
-                                session_id,
-                                c["roundNumber"],
-                                c["clickSequence"],
-                                c["isCorrect"],
-                                c["latencyMs"],
-                            )
-                            for c in clicks
-                        ],
-                    )
                 return dict(row)
 
     async def lookup_existing_session(self, client_tx_id: str) -> Optional[Dict[str, Any]]:
         async with self._pool.acquire() as conn:  # type: ignore[union-attr]
             row = await conn.fetchrow(
                 """
-                SELECT * FROM schema_memory_matrix.game_sessions
+                SELECT * FROM schema_common.game_sessions
                 WHERE client_tx_id = $1
                 """,
                 uuid.UUID(client_tx_id),
@@ -232,21 +223,26 @@ class PostgresProfileLookup(ProfileLookup):
             await self._pool.close()
 
     async def apply_memory_score_and_read(self, user_id: str, game_score: int, tz_offset_minutes: int = 0) -> int:
+        return await self.apply_user_score_and_read(user_id, game_score, "memory", tz_offset_minutes)
+
+    async def apply_user_score_and_read(self, user_id: str, game_score: int, category: str = "memory", tz_offset_minutes: int = 0) -> int:
         async with self._pool.acquire() as conn:  # type: ignore[union-attr]
             await conn.execute(
-                "SELECT schema_common.update_memory_score($1, $2, $3)",
+                "SELECT schema_common.update_user_score($1, $2, $3, $4)",
                 uuid.UUID(user_id),
+                category,
                 game_score,
                 tz_offset_minutes,
             )
+            col = f"score_{category}"
             row = await conn.fetchrow(
-                """
-                SELECT score_memory FROM schema_common.user_profiles
+                f"""
+                SELECT {col} FROM schema_common.user_profiles
                 WHERE anonymous_user_id = $1
                 """,
                 uuid.UUID(user_id),
             )
-            return int(row["score_memory"]) if row else 0
+            return int(row[col]) if row else 0
 
     async def read_full_scores(self, user_id: str) -> Dict[str, int]:
         async with self._pool.acquire() as conn:  # type: ignore[union-attr]
@@ -278,3 +274,4 @@ class PostgresProfileLookup(ProfileLookup):
                 uuid.UUID(user_id),
             )
             return int(row["current_streak"]) if row else 0
+

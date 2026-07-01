@@ -25,7 +25,9 @@ class SubmitGameRequest(BaseModel):
     responseTimeMs: int = Field(ge=0)
     roundsCompleted: int = Field(ge=0)
     client_tx_id: str
+    category: str = Field(default="memory")
     rawMetrics: RawMetrics = Field(default_factory=RawMetrics)
+
 
     @field_validator("anonymous_user_id", "client_tx_id")
     @classmethod

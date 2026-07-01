@@ -2,7 +2,37 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    // Intercept dynamic games registry endpoint
+    if (url.pathname === '/api/v1/games/registry' && request.method === 'GET') {
+      let gamesJson = null;
+      if (env.MINDFLEX_REGISTRY) {
+        gamesJson = await env.MINDFLEX_REGISTRY.get('games_list');
+      }
+      // Fallback default listing containing the benchmark game
+      if (!gamesJson) {
+        gamesJson = JSON.stringify([
+          {
+            id: 'flashmatrix',
+            title: 'Flash Matrix',
+            category: 'memory',
+            categoryLabel: 'Memory',
+            path: '/games/memory/flashmatrix/index.html',
+            difficulty: 'Medium',
+            icon: '▣',
+          }
+        ]);
+      }
+      return new Response(gamesJson, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
+
     // API requests
+
     if (url.pathname.startsWith('/api/')) {
       url.hostname = 'mindflex-api.maxithome.com';
 

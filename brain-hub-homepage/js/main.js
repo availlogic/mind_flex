@@ -21,7 +21,11 @@ import {
   HANDSHAKE_TIMEOUT_MS,
 } from './bridge-host.js';
 import { Ticker } from './ticker.js';
-import { GAMES, gameById } from './games-registry.js';
+let GAMES = [];
+function gameById(id) {
+  return GAMES.find(g => g.id === id) || null;
+}
+
 import { renderRadar } from './radar.js';
 import { ProfileOverlay } from './profile-overlay.js';
 
@@ -430,7 +434,31 @@ function bindGlobalUi() {
   applySidebarFilters();
 }
 
-function boot() {
+async function boot() {
+  // Load dynamic games registry from Worker/KV
+  try {
+    const res = await fetch('/api/v1/games/registry');
+    if (res.ok) {
+      GAMES = await res.json();
+    } else {
+      throw new Error(`HTTP ${res.status}`);
+    }
+  } catch (err) {
+    console.warn('[MindFlex] Failed to fetch dynamic games registry, using default local fallback.', err);
+    // Fallback default list
+    GAMES = [
+      {
+        id: 'flashmatrix',
+        title: 'Flash Matrix',
+        category: 'memory',
+        categoryLabel: 'Memory',
+        path: '/games/memory/flashmatrix/index.html',
+        difficulty: 'Medium',
+        icon: '▣',
+      }
+    ];
+  }
+
   const overlayRoot = document.getElementById('mf-overlay');
   overlay = new ProfileOverlay(overlayRoot, {
     onRestore: handleRestore,
@@ -449,6 +477,10 @@ function boot() {
       onGameOver: async (env) => {
         const uid = getOrCreateAnonymousUserId();
         const targetGameId = currentGameId || 'flashmatrix';
+        const game = gameById(targetGameId);
+        if (game) {
+          env.category = game.category;
+        }
         updateBestScore(targetGameId, env.score);
         try {
           const result = await dispatchGameOver(uid, targetGameId, env, (u, n, p) => api.submitGameScore(u, n, p));
@@ -477,7 +509,8 @@ function boot() {
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', boot);
+  document.addEventListener('DOMContentLoaded', () => boot().catch(console.error));
 } else {
-  boot();
+  boot().catch(console.error);
 }
+

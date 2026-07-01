@@ -177,3 +177,7 @@ cloudflared/*
 !cloudflared/.gitkeep
 *.cert.pem
 *.key.pem
+
+# Cloudflare Wrangler runtime files
+.wrangler/
+
