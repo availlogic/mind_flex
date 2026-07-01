@@ -146,10 +146,11 @@ test('E2E-SC-03: Delete All Data clears local storage after confirmation', async
   expect(r.method()).toBe('DELETE');
 });
 
-test('E2E: completing a game updates streak and daily progress tracker in UI', async ({ page }) => {
+test('E2E: completing a game updates streak, daily progress tracker, and personal best in UI', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#mf-streak')).toHaveText('0 days');
   await expect(page.locator('#mf-daily-progress')).toHaveText('0/3');
+  await expect(page.locator('[data-game-id="flashmatrix"] .mf-card__best')).toHaveText('Best: --');
 
   // Open the game stage so it listens to game over messages
   await page.locator('[data-game-id="flashmatrix"]').click();
@@ -174,9 +175,10 @@ test('E2E: completing a game updates streak and daily progress tracker in UI', a
   // The stage should close automatically upon completion
   await expect(page.locator('#mf-stage')).not.toBeVisible();
 
-  // UI should update to show 1 day streak and 1/3 daily goal progress
+  // UI should update to show 1 day streak, 1/3 daily goal progress, and updated personal best
   await expect(page.locator('#mf-streak')).toHaveText('1 day');
   await expect(page.locator('#mf-daily-progress')).toHaveText('1/3');
+  await expect(page.locator('[data-game-id="flashmatrix"] .mf-card__best')).toHaveText('Best: 850');
 
   // Open overlay and verify streak is updated there too
   await page.locator('#mf-avatar').click();

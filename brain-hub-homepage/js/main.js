@@ -51,7 +51,7 @@ function renderGames(profile) {
     card.setAttribute('tabindex', '0');
     card.setAttribute('aria-label', `Play ${game.title}, ${game.categoryLabel}`);
     card.dataset.gameId = game.id;
-    const best = bestScores[game.id];
+    const best = bestScores[game.id] || (profile && profile.scores && profile.scores[game.category] > 0 ? profile.scores[game.category] : null);
     card.innerHTML = `
       <div class="mf-card__meta">
         <span class="${getCategoryClass(game.category)}">${game.categoryLabel}</span>
@@ -177,6 +177,7 @@ async function openGameStage(game) {
   bridgeCtl = installBridgeListener({
     onGameOver: async (env) => {
       const uid = getOrCreateAnonymousUserId();
+      updateBestScore(game.id, env.score);
       try {
         const result = await dispatchGameOver(uid, game.id, env, (u, n, p) => api.submitGameScore(u, n, p));
         await onScoreSubmitted(result);
@@ -215,12 +216,56 @@ function closeGameStage() {
   }
 }
 
+function updateBestScore(gameId, score) {
+  if (!currentProfile) return;
+  if (!currentProfile._bestScores) {
+    currentProfile._bestScores = {};
+  }
+  const currentBest = currentProfile._bestScores[gameId] || 0;
+  if (score > currentBest) {
+    currentProfile._bestScores[gameId] = score;
+    cacheProfile(currentProfile.anonymous_user_id, currentProfile);
+    renderGames(currentProfile);
+  }
+}
+
+function getLocalDateString() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function checkAndResetDailyGoal(profile) {
+  if (!profile) return;
+  const today = getLocalDateString();
+  
+  let profileLocalDate = profile._lastActiveDate;
+  if (!profileLocalDate && profile.last_active_at) {
+    const d = new Date(profile.last_active_at);
+    if (!isNaN(d.getTime())) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      profileLocalDate = `${year}-${month}-${day}`;
+    }
+  }
+  
+  if (profileLocalDate && profileLocalDate !== today) {
+    profile.daily_games_played = 0;
+  }
+  profile._lastActiveDate = today;
+}
+
 async function onScoreSubmitted(result) {
   if (result && result.updatedScores && currentProfile) {
     currentProfile.scores = result.updatedScores;
     currentProfile.current_streak = result.current_streak || currentProfile.current_streak || 0;
+    checkAndResetDailyGoal(currentProfile);
     currentProfile.daily_games_played = (currentProfile.daily_games_played || 0) + 1;
     cacheProfile(currentProfile.anonymous_user_id, currentProfile);
+    renderGames(currentProfile);
     renderRating(currentProfile);
     renderRadarChart(currentProfile);
     renderDailyTracker(currentProfile);
@@ -235,6 +280,7 @@ async function bootstrapProfile() {
   const cached = loadCachedProfile(uid);
 
   if (cached) {
+    checkAndResetDailyGoal(cached);
     currentProfile = cached;
     renderGames(currentProfile);
     renderRating(currentProfile);
@@ -269,7 +315,8 @@ async function bootstrapProfile() {
       });
     }
     currentProfile = profile;
-    cacheProfile(uid, profile);
+    checkAndResetDailyGoal(currentProfile);
+    cacheProfile(uid, currentProfile);
     renderGames(currentProfile);
     renderRating(currentProfile);
     renderRadarChart(currentProfile);
@@ -303,6 +350,7 @@ async function handleRestore(recoveryToken) {
   try {
     const profile = await api.restoreProfile(recoveryToken);
     swapAnonymousUserId(profile.anonymous_user_id);
+    checkAndResetDailyGoal(profile);
     cacheProfile(profile.anonymous_user_id, profile);
     currentProfile = profile;
     renderGames(currentProfile);
@@ -391,8 +439,10 @@ function boot() {
     bridgeCtl = installBridgeListener({
       onGameOver: async (env) => {
         const uid = getOrCreateAnonymousUserId();
+        const targetGameId = currentGameId || 'flashmatrix';
+        updateBestScore(targetGameId, env.score);
         try {
-          const result = await dispatchGameOver(uid, currentGameId || 'flashmatrix', env, (u, n, p) => api.submitGameScore(u, n, p));
+          const result = await dispatchGameOver(uid, targetGameId, env, (u, n, p) => api.submitGameScore(u, n, p));
           await onScoreSubmitted(result);
         } catch (err) {
           console.warn('[MindFlex] Score submission deferred.', err);
