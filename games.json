@@ -1,0 +1,11 @@
+[
+  {
+    "id": "flashmatrix",
+    "title": "Flash Matrix",
+    "category": "memory",
+    "categoryLabel": "Memory",
+    "path": "/games/memory/flashmatrix/index.html",
+    "difficulty": "Medium",
+    "icon": "▣"
+  }
+]
