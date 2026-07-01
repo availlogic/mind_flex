@@ -185,3 +185,63 @@ test('E2E: completing a game updates streak, daily progress tracker, and persona
   await expect(page.locator('#mf-overlay')).toHaveClass(/mf-overlay--visible/);
   await expect(page.locator('#mf-overlay-streak')).toHaveText('1 day');
 });
+
+test('E2E: Custom Tags Filter UI - Desktop/Tablet view checks', async ({ page }) => {
+  await page.goto('/');
+
+  // Desktop View
+  await page.setViewportSize({ width: 1024, height: 768 });
+  
+  // Verify HTML structure for Custom Tags exists
+  const memoryGroup = page.locator('[data-mf-filter-group="memory"]');
+  await expect(memoryGroup).toBeVisible();
+  
+  const indicator = memoryGroup.locator('.mf-sidebar__filter-indicator');
+  await expect(indicator).toHaveText('M');
+  
+  const text = memoryGroup.locator('.mf-sidebar__filter-text');
+  await expect(text).toHaveText('Memory');
+  await expect(text).toBeVisible();
+
+  // Verify checking a filter toggles active class on the label wrapper
+  const checkbox = memoryGroup.locator('input[type="checkbox"]');
+  await expect(checkbox).not.toBeChecked();
+  await expect(memoryGroup).not.toHaveClass(/mf-sidebar__filter--active/);
+
+  // Click the tag (label wrapper is clickable)
+  await memoryGroup.click();
+  await expect(checkbox).toBeChecked();
+  await expect(memoryGroup).toHaveClass(/mf-sidebar__filter--active/);
+
+  // Tablet View
+  await page.setViewportSize({ width: 800, height: 1024 });
+  // Text should be hidden, but the indicator remains visible
+  await expect(text).not.toBeVisible();
+  await expect(indicator).toBeVisible();
+});
+
+test('E2E: Custom Tags Filter UI - Mobile view checks', async ({ page }) => {
+  await page.goto('/');
+
+  // Mobile View
+  await page.setViewportSize({ width: 375, height: 667 });
+
+  // Sidebar filters should be hidden
+  await expect(page.locator('[data-mf-filter-group="memory"]')).not.toBeVisible();
+
+  // Mobile top pill filters should be visible
+  const mobilePill = page.locator('[data-mf-pill="memory"]');
+  await expect(mobilePill).toBeVisible();
+  await expect(mobilePill).toHaveAttribute('aria-pressed', 'false');
+  await expect(mobilePill).not.toHaveClass(/mf-main__filter-pill--active/);
+
+  // Clicking mobile pill should toggle its state and the corresponding sidebar checkbox
+  await mobilePill.click();
+  await expect(mobilePill).toHaveAttribute('aria-pressed', 'true');
+  await expect(mobilePill).toHaveClass(/mf-main__filter-pill--active/);
+
+  // In mobile, we check the hidden sidebar input
+  const sidebarCheckbox = page.locator('[data-mf-filter="memory"]');
+  await expect(sidebarCheckbox).toBeChecked();
+});
+

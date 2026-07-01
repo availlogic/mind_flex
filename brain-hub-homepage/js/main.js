@@ -79,7 +79,12 @@ function applySidebarFilters() {
   const sidebarFilters = document.querySelectorAll('[data-mf-filter]');
   const activeCats = new Set();
   sidebarFilters.forEach(el => {
-    if (el.checked) activeCats.add(el.dataset.mfFilter);
+    const isChecked = el.checked;
+    if (isChecked) activeCats.add(el.dataset.mfFilter);
+    const label = el.closest('.mf-sidebar__filter');
+    if (label) {
+      label.classList.toggle('mf-sidebar__filter--active', isChecked);
+    }
   });
 
   const cards = document.querySelectorAll('[data-game-id]');
@@ -95,7 +100,9 @@ function applySidebarFilters() {
 
   // Pill highlights in main
   document.querySelectorAll('[data-mf-pill]').forEach(pill => {
-    pill.classList.toggle('mf-main__filter-pill--active', activeCats.has(pill.dataset.mfPill));
+    const isActive = activeCats.has(pill.dataset.mfPill);
+    pill.classList.toggle('mf-main__filter-pill--active', isActive);
+    pill.setAttribute('aria-pressed', isActive ? 'true' : 'false');
   });
 }
 
@@ -419,6 +426,8 @@ function bindGlobalUi() {
   if (backBtn) {
     backBtn.addEventListener('click', closeGameStage);
   }
+  // Initialize filter active classes on boot
+  applySidebarFilters();
 }
 
 function boot() {

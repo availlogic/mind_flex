@@ -9,12 +9,20 @@
     padding: 1.5rem 0.5rem;
   }
   .mf-sidebar__group h3,
-  .mf-sidebar__filter span,
+  .mf-sidebar__filter-text,
   .mf-sidebar__daily-text {
     display: none;
   }
   .mf-sidebar__filter {
     justify-content: center;
+    padding: 0.5rem 0;
+    border-color: transparent !important;
+    background: transparent !important;
+  }
+  .mf-sidebar__filter-indicator {
+    width: 36px;
+    height: 36px;
+    font-size: var(--mf-fs-body);
   }
   .mf-sidebar__daily {
     text-align: center;

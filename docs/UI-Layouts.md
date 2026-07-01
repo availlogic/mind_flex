@@ -27,11 +27,11 @@ MindFlex uses a flexible layout consisting of a **Top Bar**, a collapsible **Sid
 |  Progress: [2/3] |  | Card: Flash Matrix |  | Card: Color Stroop |  | Card...  |  |
 |  ────────────────|  | Tag: Memory        |  | Tag: Focus         |  |          |  |
 |  [Tag Filters]   |  | Diff: Medium       |  | Diff: Hard         |  |          |  |
-|  [x] Memory      |  | Personal Best: 920 |  | Personal Best: --  |  |          |  |
-|  [ ] Focus       |  +--------------------+  +--------------------+  +----------+  |
-|  [ ] Logic       |                                                                |
-|  [ ] Speed       |  +--------------------+  +--------------------+                |
-|  [ ] Spatial     |  | Card: Grid Rotator |  | Card: Speed Search |                |
+|  (M) Memory      |  | Personal Best: 920 |  | Personal Best: --  |  |          |  |
+|  (F) Focus       |  +--------------------+  +--------------------+  +----------+  |
+|  (L) Logic       |                                                                |
+|  (S) Speed       |  +--------------------+  +--------------------+                |
+|  (Sp) Spatial    |  | Card: Grid Rotator |  | Card: Speed Search |                |
 |                  |  | Tag: Spatial       |  | Tag: Speed         |                |
 |                  |  | Diff: Hard         |  | Diff: Easy         |                |
 |                  |  | Personal Best: 610 |  | Personal Best: 720 |                |
@@ -43,7 +43,7 @@ MindFlex uses a flexible layout consisting of a **Top Bar**, a collapsible **Sid
 *   `(920)`: Real-time global brain score.
 *   `[2/3]`: Interactive Daily Progress indicator.
 *   **Tag Filters Visibility Behavior**:
-    *   **Desktop & Tablet (width $\ge 768$px)**: The top horizontal tag filter bar is hidden, and only the left sidebar tag filters are displayed. On Tablet, the sidebar collapses to icon-only, exposing only the checkboxes.
+    *   **Desktop & Tablet (width $\ge 768$px)**: The top horizontal tag filter bar is hidden, and only the left sidebar tag filters are displayed. On Tablet, the sidebar collapses to icon-only, exposing only the custom circular tag indicators (M, F, L, S, Sp) which act as category badges.
     *   **Mobile (width $< 768$px)**: The left sidebar tag filters section is completely hidden (even inside the drawer). A prominent top horizontal `Filter Tags` pills bar is shown at the top of the lobby content area instead.
 
 ---

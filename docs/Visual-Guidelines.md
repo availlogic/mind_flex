@@ -63,6 +63,13 @@ We use clean, geometric sans-serif fonts to match the technical, futuristic them
 *   *Shape*: Small pill shapes with 50% opacity neon backgrounds and solid matching borders.
 *   *Padding*: `0.25rem (4px)` vertical, `0.75rem (12px)` horizontal.
 
+### 4.4 Multi-Select Tag Filters
+*   *Interaction Mechanics*: Native checkbox inputs are visually hidden. Active states are managed via parent element class toggles (`.mf-sidebar__filter--active`).
+*   *Indicator circles (Desktop/Tablet Sidebar)*: Circular indicator badges displaying single-letter abbreviations (M, F, L, S, Sp).
+    *   *Inactive*: Semi-transparent slate background, muted border (`hsl(223, 14%, 20%)`).
+    *   *Active / Hover*: Circle background fills with solid matching category neon color, dark slate text (`hsl(222, 24%, 7%)`), and glows using box-shadow offsets. Label background receives a subtle matching tint.
+*   *Pills (Mobile)*: Rounded pill button wrapping the tag name. Active / Hover state applies category-specific border, text, and background highlights instead of defaulting to cyan.
+
 ---
 
 ## 5. Accessibility & Compliance
