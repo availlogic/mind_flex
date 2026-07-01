@@ -139,14 +139,15 @@
               Import Token (4 dash-separated words)
             </label>
             <input id="mf-import-token" class="mf-input" type="text" data-mf-role="import-token"
-                   placeholder="crimson-tiger-autumn-breeze" autocomplete="off" autocorrect="off" spellcheck="false">
-            <div class="mf-error" data-mf-role="import-error" role="alert"></div>
+                   placeholder="crimson-tiger-autumn-breeze" autocomplete="off" autocorrect="off" spellcheck="false"
+                   style="margin-bottom: 0.75rem;">
+            <button class="mf-button mf-button--primary" data-mf-role="restore-submit">Restore</button>
+            <div class="mf-error" data-mf-role="import-error" role="alert" style="margin-top: 0.5rem;"></div>
           </div>
         </div>
       </div>
 
       <div class="mf-actions">
-        <button class="mf-button mf-button--primary" data-mf-role="restore-submit">Restore</button>
         <button class="mf-button mf-button--danger" data-mf-role="delete-data">Delete All Data</button>
       </div>
     </div>
